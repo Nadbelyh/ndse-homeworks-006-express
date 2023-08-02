@@ -2,6 +2,7 @@ const express = require("express");
 const Book = require("../Book/book");
 const router = express.Router();
 const fileMiddleware = require("../middleware/file");
+const { getCounter, setCounter } = require("./counterReq");
 
 const stor = {
   books: [
@@ -31,13 +32,22 @@ router.get("/view/:id", (req, res) => {
   const { id } = req.params;
   const book = stor.books.findIndex((book) => book.id === id);
   if (book !== -1) {
-    res.render("books/view", {
-      title: "Выбранная книга",
-      book: stor.books[book],
+    getCounter(id, (resp) => {
+      if (resp.statusCode !== 500) {
+        resp.on("data", (d) => {
+          const count = JSON.parse(d).count;
+          console.log(`Запрос прошел успешно, cnt - ${count}`);
+          res.render("books/view", {
+            title: "Выбранная книга",
+            book: stor.books[book],
+            count: count,
+          });
+        });
+        setCounter(id);
+      } else {
+        res.status(404).redirect("../views/error/404");
+      }
     });
-  } else {
-    res.status(404);
-    res.redirect("../views/error/404");
   }
 });
 
