@@ -1,0 +1,23 @@
+services:
+  storage:
+    image: redis
+    volumes:
+      - ./data:/data
+  counter:
+    image: nadbelyh/counter:latest
+    ports:
+      - 3001:3001
+    environment:
+      - PORT=3001
+      - REDIS_URL=redis://storage
+    depends_on:
+      - storage
+  library:
+    image: nadbelyh/books:latest
+    ports:
+      - 3000:3000
+    environment:
+      - PORT=3000
+      - HOST_URL=counter
+    depends_on:
+      - counter
